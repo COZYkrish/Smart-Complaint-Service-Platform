@@ -1,122 +1,112 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import useAuthStore from './stores/authStore';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Lazy loaded pages
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+const UserDashboard = lazy(() => import('./pages/dashboard/UserDashboard'));
+const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard'));
 
+function LoadingSpinner() {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div style={{
+      minHeight: '100vh',
+      background: '#0A0F1C',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div
+          style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            border: '2px solid rgba(99,102,241,0.2)',
+            borderTopColor: '#6366f1',
+            animation: 'spin-slow 0.8s linear infinite',
+            margin: '0 auto 16px',
+          }}
+        />
+        <p style={{ color: '#475569', fontSize: '0.875rem' }}>Loading...</p>
+      </div>
+    </div>
+  );
 }
 
-export default App
+function ProtectedRoute({ children, requireRole }) {
+  const { user, token } = useAuthStore();
+
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requireRole && user.role !== requireRole) {
+    return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+  }
+
+  return children;
+}
+
+function GuestRoute({ children }) {
+  const { user, token } = useAuthStore();
+  if (token && user) {
+    return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+  }
+  return children;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'rgba(15,22,40,0.95)',
+            color: '#f8fafc',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '12px',
+            backdropFilter: 'blur(20px)',
+            fontSize: '0.9375rem',
+            fontFamily: 'Inter, sans-serif',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          },
+          success: { iconTheme: { primary: '#10b981', secondary: '#0A0F1C' } },
+          error: { iconTheme: { primary: '#f43f5e', secondary: '#0A0F1C' } },
+        }}
+      />
+
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<LandingPage />} />
+
+          {/* Guest only */}
+          <Route path="/login" element={
+            <GuestRoute><LoginPage /></GuestRoute>
+          } />
+          <Route path="/register" element={
+            <GuestRoute><RegisterPage /></GuestRoute>
+          } />
+
+          {/* User dashboard */}
+          <Route path="/dashboard/*" element={
+            <ProtectedRoute><UserDashboard /></ProtectedRoute>
+          } />
+
+          {/* Admin dashboard */}
+          <Route path="/admin/*" element={
+            <ProtectedRoute requireRole="admin"><AdminDashboard /></ProtectedRoute>
+          } />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  );
+}
