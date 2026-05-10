@@ -7,4 +7,18 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  base: '/',
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['framer-motion', 'react-hot-toast'],
+          charts: ['recharts'],
+          three: ['three', '@react-three/fiber', '@react-three/drei'],
+        },
+      },
+    },
+  },
 })
