@@ -1,7 +1,26 @@
+# Dependencies
 node_modules/
+**/node_modules/
+
+# Environment variables — NEVER commit these
 .env
+.env.local
+.env.*.local
+server/.env
+client/.env
+
+# Build output
 dist/
+client/dist/
+.vite/
+
+# OS / Editor artifacts
 .DS_Store
+Thumbs.db
 *.log
 npm-debug.log*
-.vite/
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+*.sw?

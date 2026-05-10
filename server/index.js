@@ -19,23 +19,44 @@ const userRoutes = require('./routes/users');
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy — required for correct IP detection behind Railway/Render/Vercel load balancers
+app.set('trust proxy', 1);
+
 // Initialize Socket.io
 initSocket(server);
 
 // Connect to MongoDB
 connectDB();
 
-// Security middleware
-app.use(helmet({ crossOriginEmbedderPolicy: false }));
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Build an allowlist from the CLIENT_URL env var plus localhost for dev.
+const rawClientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+const allowedOrigins = [
+  rawClientUrl,
+  'http://localhost:5173',
+  'http://localhost:4173', // vite preview
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (server-to-server, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin '${origin}' is not allowed.`));
+  },
   credentials: true,
 }));
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Security middleware
+app.use(helmet({ crossOriginEmbedderPolicy: false }));
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { success: false, message: 'Too many requests. Please try again later.' },
 });
 app.use('/api', limiter);
@@ -44,6 +65,8 @@ app.use('/api', limiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { success: false, message: 'Too many auth attempts. Please try again later.' },
 });
 
