@@ -12,13 +12,16 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['framer-motion', 'react-hot-toast'],
-          charts: ['recharts'],
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('three') || id.includes('@react-three')) return 'three';
+            if (id.includes('recharts')) return 'charts';
+            if (id.includes('framer-motion') || id.includes('react-hot-toast')) return 'ui';
+            if (id.includes('react-dom') || id.includes('react-router')) return 'vendor';
+          }
         },
       },
     },
   },
 })
+
