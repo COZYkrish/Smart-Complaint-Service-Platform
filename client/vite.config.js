@@ -10,6 +10,7 @@ export default defineConfig({
   base: '/',
   build: {
     sourcemap: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
