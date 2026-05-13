@@ -943,7 +943,7 @@ MIT License - See LICENSE file for details
 
 ## 📞 Support
 
-- 📧 Email: your-email@example.com
+- 📧 Email: cozykrish2916@gmail.com
 - 🐛 Issues: GitHub Issues
 - 💬 Discussions: GitHub Discussions
 
