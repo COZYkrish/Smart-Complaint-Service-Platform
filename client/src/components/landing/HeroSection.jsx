@@ -5,35 +5,32 @@ import { useInView } from 'framer-motion';
 import HeroCanvas from './HeroCanvas';
 import { MagneticLink, useScramble } from '../ui/UIEffects';
 
-/* ── Word-by-word 3D flip reveal ───────────────────────── */
+/* ── Word 3D flip reveal ─────────────────────────────────── */
 const words = ['Resolve', 'Every', 'Complaint', 'Intelligently.'];
 
 function Word3D({ word, index, highlight }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-50px' });
+  const inView = useInView(ref, { once: true, margin: '-30px' });
 
   return (
     <motion.span
       ref={ref}
-      initial={{ rotateX: 90, opacity: 0, y: 20 }}
+      initial={{ rotateX: 90, opacity: 0, y: 16 }}
       animate={inView ? { rotateX: 0, opacity: 1, y: 0 } : {}}
-      transition={{
-        duration: 0.9,
-        delay: index * 0.15 + 0.3,
-        ease: [0.22, 1, 0.36, 1],
-      }}
+      transition={{ duration: 0.85, delay: index * 0.13 + 0.2, ease: [0.22, 1, 0.36, 1] }}
       style={{
         display: 'inline-block',
         transformOrigin: '50% 0%',
         transformStyle: 'preserve-3d',
         color: highlight ? 'transparent' : '#ffffff',
         background: highlight
-          ? 'linear-gradient(135deg, #ffffff 0%, #777777 50%, #ffffff 100%)'
+          ? 'linear-gradient(135deg, #ffffff 0%, #666666 50%, #ffffff 100%)'
           : undefined,
         backgroundSize: highlight ? '200% auto' : undefined,
         WebkitBackgroundClip: highlight ? 'text' : undefined,
         backgroundClip: highlight ? 'text' : undefined,
         animation: highlight ? 'shimmer-text 3s linear infinite' : undefined,
+        lineHeight: 1.05,
       }}
     >
       {word}
@@ -41,39 +38,37 @@ function Word3D({ word, index, highlight }) {
   );
 }
 
-/* ── Animated stat counter ──────────────────────────────── */
+/* ── Stat item ───────────────────────────────────────────── */
 function StatItem({ value, label, delay }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
-
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
-      style={{ position: 'relative', paddingLeft: '20px' }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+      style={{ position: 'relative', paddingLeft: '16px' }}
     >
-      {/* Left accent line */}
       <motion.div
         initial={{ scaleY: 0 }}
         animate={inView ? { scaleY: 1 } : {}}
-        transition={{ duration: 0.4, delay: delay + 0.2 }}
+        transition={{ duration: 0.35, delay: delay + 0.15 }}
         style={{
-          position: 'absolute', left: 0, top: 0, bottom: 0,
-          width: '1px', background: 'rgba(255,255,255,0.2)',
+          position: 'absolute', left: 0, top: '4px', bottom: '4px',
+          width: '1px', background: 'rgba(255,255,255,0.18)',
           transformOrigin: 'top',
         }}
       />
       <div style={{
-        fontSize: '2rem', fontWeight: 700, color: '#ffffff',
+        fontSize: '1.6rem', fontWeight: 700, color: '#ffffff',
         lineHeight: 1, fontFamily: 'Space Mono, monospace',
         letterSpacing: '-0.02em',
       }}>
         {value}
       </div>
       <div style={{
-        fontSize: '0.6875rem', color: '#444444', marginTop: '6px',
+        fontSize: '0.6rem', color: '#444444', marginTop: '5px',
         fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase',
         fontFamily: 'Space Mono, monospace',
       }}>
@@ -83,31 +78,24 @@ function StatItem({ value, label, delay }) {
   );
 }
 
-/* ── Main HeroSection ───────────────────────────────────── */
+/* ── HeroSection ─────────────────────────────────────────── */
 export default function HeroSection() {
   const sectionRef = useRef(null);
 
-  // Scroll-driven parallax
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end start'],
   });
+  const scrollSmooth = useSpring(scrollYProgress, { stiffness: 50, damping: 20 });
 
-  const scrollProgress = useSpring(scrollYProgress, { stiffness: 60, damping: 20 });
+  /* Parallax transforms — subtle so buttons stay visible */
+  const contentY       = useTransform(scrollSmooth, [0, 1], ['0%', '18%']);
+  const contentOpacity = useTransform(scrollSmooth, [0, 0.7], [1, 0]);
 
-  // Parallax transforms
-  const contentY    = useTransform(scrollProgress, [0, 1], ['0%', '30%']);
-  const contentOpacity = useTransform(scrollProgress, [0, 0.6], [1, 0]);
-  const contentScale   = useTransform(scrollProgress, [0, 1], [1, 0.88]);
-  const bgY         = useTransform(scrollProgress, [0, 1], ['0%', '15%']);
-
-  // Eyebrow label scramble
+  /* Scramble eyebrow */
   const [triggered, setTriggered] = useState(false);
-  const scrambled = useScramble('Smart Service Platform', triggered);
-  useEffect(() => {
-    const timer = setTimeout(() => setTriggered(true), 400);
-    return () => clearTimeout(timer);
-  }, []);
+  const scrambled = useScramble('SMART SERVICE PLATFORM', triggered);
+  useEffect(() => { const t = setTimeout(() => setTriggered(true), 500); return () => clearTimeout(t); }, []);
 
   return (
     <section
@@ -116,162 +104,164 @@ export default function HeroSection() {
       style={{
         position: 'relative',
         minHeight: '100vh',
+        background: '#000000',
+        overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',
-        overflow: 'hidden',
-        background: '#000000',
       }}
     >
       {/* Scanlines */}
       <div className="scanline-overlay" />
 
-      {/* Background grid */}
-      <motion.div
-        style={{ y: bgY, position: 'absolute', inset: 0, pointerEvents: 'none' }}
-      >
-        <svg
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.04 }}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <pattern id="hero-grid" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#hero-grid)"/>
-        </svg>
-      </motion.div>
-
-      {/* Vignette */}
+      {/* Background dot-grid */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%)',
-        zIndex: 1,
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)',
+        WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)',
       }} />
 
-      {/* 3D Canvas — right */}
+      {/* Right-side vignette to blend 3D into black */}
       <div style={{
-        position: 'absolute', right: 0, top: 0,
-        width: '58%', height: '100%', pointerEvents: 'none', zIndex: 2,
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3,
+        background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 42%, rgba(0,0,0,0.1) 65%, transparent 100%)',
+      }} />
+
+      {/* ── 3D CANVAS — fills entire right side ─────────────── */}
+      <div style={{
+        position: 'absolute',
+        right: '-2%',
+        top: '0',
+        width: '62%',
+        height: '100%',
+        zIndex: 2,
+        pointerEvents: 'none',
       }}>
         <HeroCanvas scrollProgress={scrollYProgress} />
       </div>
 
-      {/* Content — left */}
+      {/* ── LEFT CONTENT ────────────────────────────────────── */}
       <motion.div
-        className="container-wide"
         style={{
           position: 'relative', zIndex: 10,
-          y: contentY, opacity: contentOpacity, scale: contentScale,
+          y: contentY, opacity: contentOpacity,
+          width: '100%',
         }}
       >
-        <div style={{ maxWidth: '600px' }}>
+        <div style={{
+          maxWidth: '1280px', margin: '0 auto',
+          padding: '0 40px',
+        }}>
+          {/* Content column — max 52% wide on desktop */}
+          <div style={{ maxWidth: '560px' }}>
 
-          {/* Chapter label */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            style={{ marginBottom: '28px' }}
-          >
-            <span className="chapter-label">Chapter 01 — The Awakening</span>
-          </motion.div>
+            {/* Chapter label */}
+            <motion.span
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="chapter-label"
+              style={{ display: 'block', marginBottom: '20px' }}
+            >
+              Chapter 01 — The Awakening
+            </motion.span>
 
-          {/* Eyebrow badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            style={{ marginBottom: '36px' }}
-          >
-            <span
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '10px',
-                padding: '6px 18px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                fontSize: '0.75rem', fontWeight: 600, color: '#888888',
-                letterSpacing: '0.18em', textTransform: 'uppercase',
-                fontFamily: 'Space Mono, monospace',
-                background: 'rgba(255,255,255,0.03)',
-              }}
+            {/* Eyebrow badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              style={{ marginBottom: '28px' }}
             >
               <span style={{
-                width: '5px', height: '5px', borderRadius: '50%',
-                background: '#ffffff', display: 'inline-block',
-                animation: 'breathe 2s ease-in-out infinite',
-              }} />
-              {scrambled}
-            </span>
-          </motion.div>
+                display: 'inline-flex', alignItems: 'center', gap: '10px',
+                padding: '5px 16px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                fontSize: '0.65rem', fontWeight: 600, color: '#666666',
+                letterSpacing: '0.2em', textTransform: 'uppercase',
+                fontFamily: 'Space Mono, monospace',
+                background: 'rgba(255,255,255,0.02)',
+              }}>
+                <span style={{
+                  width: '5px', height: '5px', borderRadius: '50%',
+                  background: '#ffffff', display: 'inline-block',
+                  animation: 'breathe 2s ease-in-out infinite',
+                }} />
+                {scrambled}
+              </span>
+            </motion.div>
 
-          {/* Headline — 3D word flip */}
-          <h1
-            className="text-display"
-            style={{
-              marginBottom: '28px',
-              display: 'flex', flexWrap: 'wrap',
-              gap: '0.28em', lineHeight: 1.02,
-              perspective: '800px',
-              perspectiveOrigin: '50% 50%',
-            }}
-          >
-            {words.map((word, i) => (
-              <Word3D key={i} word={word} index={i} highlight={i === 2} />
-            ))}
-          </h1>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.4, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              fontSize: '1.0625rem', color: '#666666', lineHeight: 1.75,
-              marginBottom: '52px', maxWidth: '460px',
-              fontWeight: 400,
-            }}
-          >
-            A cinematic platform for submitting, tracking, and resolving
-            service complaints — with real-time updates and intelligent routing.
-          </motion.p>
-
-          {/* CTA Buttons — 3D Magnetic */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 1.8 }}
-            style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '72px' }}
-          >
-            <MagneticLink
-              to="/register"
-              id="hero-cta-primary"
-              className="btn btn-primary btn-lg"
+            {/* Headline — 3D word flip */}
+            <h1
+              className="text-display"
+              style={{
+                marginBottom: '20px',
+                display: 'flex', flexWrap: 'wrap',
+                gap: '0.22em',
+                fontSize: 'clamp(2.6rem, 5.5vw, 5.5rem)',
+                perspective: '700px',
+                perspectiveOrigin: '0% 50%',
+              }}
             >
-              Get Started
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </MagneticLink>
-            <MagneticLink
-              to="#features"
-              id="hero-cta-secondary"
-              className="btn btn-outline btn-lg"
-            >
-              See How It Works
-            </MagneticLink>
-          </motion.div>
+              {words.map((word, i) => (
+                <Word3D key={i} word={word} index={i} highlight={i === 2} />
+              ))}
+            </h1>
 
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 2.2 }}
-            style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}
-          >
-            <StatItem value="99.9%" label="Uptime SLA"      delay={2.3} />
-            <StatItem value="< 2h"  label="Avg Resolution"  delay={2.4} />
-            <StatItem value="50K+"  label="Issues Resolved"  delay={2.5} />
-          </motion.div>
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                fontSize: '0.9875rem', color: '#555555', lineHeight: 1.75,
+                marginBottom: '36px', maxWidth: '440px', fontWeight: 400,
+              }}
+            >
+              A cinematic platform for submitting, tracking, and resolving
+              service complaints — with real-time updates and intelligent routing.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.3 }}
+              style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '48px' }}
+            >
+              <MagneticLink
+                to="/register"
+                id="hero-cta-primary"
+                className="btn btn-primary btn-lg"
+              >
+                Get Started
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </MagneticLink>
+
+              <MagneticLink
+                to="#features"
+                id="hero-cta-secondary"
+                className="btn btn-outline btn-lg"
+              >
+                See How It Works
+              </MagneticLink>
+            </motion.div>
+
+            {/* Stats row */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 1.6 }}
+              style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}
+            >
+              <StatItem value="99.9%" label="Uptime SLA"     delay={1.7} />
+              <StatItem value="< 2h"  label="Avg Resolution" delay={1.8} />
+              <StatItem value="50K+"  label="Resolved"        delay={1.9} />
+            </motion.div>
+          </div>
         </div>
       </motion.div>
 
@@ -279,27 +269,27 @@ export default function HeroSection() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2.8 }}
+        transition={{ delay: 2.4 }}
         style={{
-          position: 'absolute', bottom: '36px', left: '50%',
+          position: 'absolute', bottom: '28px', left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex', flexDirection: 'column',
-          alignItems: 'center', gap: '10px', zIndex: 10,
+          alignItems: 'center', gap: '8px', zIndex: 10,
         }}
       >
         <span style={{
-          fontSize: '0.625rem', color: '#333333',
-          letterSpacing: '0.25em', textTransform: 'uppercase',
+          fontSize: '0.55rem', color: '#2a2a2a',
+          letterSpacing: '0.28em', textTransform: 'uppercase',
           fontFamily: 'Space Mono, monospace',
         }}>
           Scroll
         </span>
         <motion.div
-          animate={{ y: [0, 10, 0] }}
+          animate={{ y: [0, 8, 0] }}
           transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
           style={{
-            width: '1px', height: '48px',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%)',
+            width: '1px', height: '40px',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%)',
           }}
         />
       </motion.div>
