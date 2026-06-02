@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import HeroCanvas from './HeroCanvas';
@@ -38,45 +37,7 @@ function Word3D({ word, index, highlight }) {
   );
 }
 
-/* ── Stat item ───────────────────────────────────────────── */
-function StatItem({ value, label, delay }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 12 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-      style={{ position: 'relative', paddingLeft: '16px' }}
-    >
-      <motion.div
-        initial={{ scaleY: 0 }}
-        animate={inView ? { scaleY: 1 } : {}}
-        transition={{ duration: 0.35, delay: delay + 0.15 }}
-        style={{
-          position: 'absolute', left: 0, top: '4px', bottom: '4px',
-          width: '1px', background: 'rgba(255,255,255,0.18)',
-          transformOrigin: 'top',
-        }}
-      />
-      <div style={{
-        fontSize: '1.6rem', fontWeight: 700, color: '#ffffff',
-        lineHeight: 1, fontFamily: 'Space Mono, monospace',
-        letterSpacing: '-0.02em',
-      }}>
-        {value}
-      </div>
-      <div style={{
-        fontSize: '0.6rem', color: '#444444', marginTop: '5px',
-        fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase',
-        fontFamily: 'Space Mono, monospace',
-      }}>
-        {label}
-      </div>
-    </motion.div>
-  );
-}
+
 
 /* ── HeroSection ─────────────────────────────────────────── */
 export default function HeroSection() {
@@ -250,17 +211,7 @@ export default function HeroSection() {
               </MagneticLink>
             </motion.div>
 
-            {/* Stats row */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 1.6 }}
-              style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}
-            >
-              <StatItem value="99.9%" label="Uptime SLA"     delay={1.7} />
-              <StatItem value="< 2h"  label="Avg Resolution" delay={1.8} />
-              <StatItem value="50K+"  label="Resolved"        delay={1.9} />
-            </motion.div>
+
           </div>
         </div>
       </motion.div>
