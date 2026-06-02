@@ -2,52 +2,52 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './stores/authStore';
+import SmoothScroll from './components/ui/SmoothScroll';
 
 // Lazy loaded pages
-const LandingPage = lazy(() => import('./pages/LandingPage'));
-const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
-const UserDashboard = lazy(() => import('./pages/dashboard/UserDashboard'));
+const LandingPage    = lazy(() => import('./pages/LandingPage'));
+const LoginPage      = lazy(() => import('./pages/auth/LoginPage'));
+const RegisterPage   = lazy(() => import('./pages/auth/RegisterPage'));
+const UserDashboard  = lazy(() => import('./pages/dashboard/UserDashboard'));
 const AdminDashboard = lazy(() => import('./pages/dashboard/AdminDashboard'));
 
+/* ── Loading spinner — B&W ──────────────────────────────── */
 function LoadingSpinner() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0A0F1C',
+      background: '#000000',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
     }}>
-      <div style={{ textAlign: 'center' }}>
-        <div
-          style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            border: '2px solid rgba(99,102,241,0.2)',
-            borderTopColor: '#6366f1',
-            animation: 'spin-slow 0.8s linear infinite',
-            margin: '0 auto 16px',
-          }}
-        />
-        <p style={{ color: '#475569', fontSize: '0.875rem' }}>Loading...</p>
+      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+        {/* Spinning square */}
+        <div style={{
+          width: '40px', height: '40px',
+          border: '1.5px solid rgba(255,255,255,0.15)',
+          borderTopColor: '#ffffff',
+          animation: 'spin-slow 0.9s linear infinite',
+        }} />
+        <p style={{
+          color: '#333333', fontSize: '0.6875rem',
+          letterSpacing: '0.25em', textTransform: 'uppercase',
+          fontFamily: 'Space Mono, monospace',
+        }}>
+          Loading
+        </p>
       </div>
     </div>
   );
 }
 
+/* ── Route guards ───────────────────────────────────────── */
 function ProtectedRoute({ children, requireRole }) {
   const { user, token } = useAuthStore();
-
-  if (!token || !user) {
-    return <Navigate to="/login" replace />;
-  }
-
+  if (!token || !user) return <Navigate to="/login" replace />;
   if (requireRole && user.role !== requireRole) {
     return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
   }
-
   return children;
 }
 
@@ -59,54 +59,56 @@ function GuestRoute({ children }) {
   return children;
 }
 
+/* ── App ────────────────────────────────────────────────── */
 export default function App() {
   return (
     <BrowserRouter>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: 'rgba(15,22,40,0.95)',
-            color: '#f8fafc',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '12px',
-            backdropFilter: 'blur(20px)',
-            fontSize: '0.9375rem',
-            fontFamily: 'Inter, sans-serif',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          },
-          success: { iconTheme: { primary: '#10b981', secondary: '#0A0F1C' } },
-          error: { iconTheme: { primary: '#f43f5e', secondary: '#0A0F1C' } },
-        }}
-      />
+      {/* Lenis smooth scroll — wraps everything inside router so it can
+          read location.pathname and conditionally enable/disable */}
+      <SmoothScroll>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: 'rgba(8, 8, 8, 0.95)',
+              color: '#ffffff',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '0',
+              backdropFilter: 'blur(20px)',
+              fontSize: '0.875rem',
+              fontFamily: 'Space Grotesk, sans-serif',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+              padding: '14px 18px',
+            },
+            success: { iconTheme: { primary: '#ffffff', secondary: '#000000' } },
+            error:   { iconTheme: { primary: '#ff4444', secondary: '#000000' } },
+          }}
+        />
 
-      <Suspense fallback={<LoadingSpinner />}>
-        <Routes>
-          {/* Public */}
-          <Route path="/" element={<LandingPage />} />
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            {/* Public */}
+            <Route path="/" element={<LandingPage />} />
 
-          {/* Guest only */}
-          <Route path="/login" element={
-            <GuestRoute><LoginPage /></GuestRoute>
-          } />
-          <Route path="/register" element={
-            <GuestRoute><RegisterPage /></GuestRoute>
-          } />
+            {/* Guest only */}
+            <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
+            <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
 
-          {/* User dashboard */}
-          <Route path="/dashboard/*" element={
-            <ProtectedRoute><UserDashboard /></ProtectedRoute>
-          } />
+            {/* User dashboard */}
+            <Route path="/dashboard/*" element={
+              <ProtectedRoute><UserDashboard /></ProtectedRoute>
+            } />
 
-          {/* Admin dashboard */}
-          <Route path="/admin/*" element={
-            <ProtectedRoute requireRole="admin"><AdminDashboard /></ProtectedRoute>
-          } />
+            {/* Admin dashboard */}
+            <Route path="/admin/*" element={
+              <ProtectedRoute requireRole="admin"><AdminDashboard /></ProtectedRoute>
+            } />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </SmoothScroll>
     </BrowserRouter>
   );
 }
