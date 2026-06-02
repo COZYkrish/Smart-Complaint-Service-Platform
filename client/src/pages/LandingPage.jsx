@@ -48,7 +48,6 @@ export default function LandingPage() {
     <div style={{ background: '#000000', minHeight: '100vh' }}>
       {/* Global effects */}
       <div className="noise-overlay" />
-      <CustomCursor />
       <ScrollProgressBar />
 
       <Navbar />

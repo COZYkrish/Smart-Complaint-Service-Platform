@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './stores/authStore';
 import SmoothScroll from './components/ui/SmoothScroll';
+import { CustomCursor } from './components/ui/UIEffects';
 
 // Lazy loaded pages
 const LandingPage    = lazy(() => import('./pages/LandingPage'));
@@ -66,6 +67,7 @@ export default function App() {
       {/* Lenis smooth scroll — wraps everything inside router so it can
           read location.pathname and conditionally enable/disable */}
       <SmoothScroll>
+        <CustomCursor />
         <Toaster
           position="top-right"
           toastOptions={{

@@ -60,7 +60,8 @@ const getComplaints = async (req, res) => {
     .populate('assignedTo', 'name email')
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(parseInt(limit));
+    .limit(parseInt(limit))
+    .lean();
 
   res.json({
     success: true,
@@ -78,7 +79,8 @@ const getComplaint = async (req, res) => {
   const complaint = await Complaint.findById(req.params.id)
     .populate('userId', 'name email')
     .populate('assignedTo', 'name email')
-    .populate('statusHistory.changedBy', 'name');
+    .populate('statusHistory.changedBy', 'name')
+    .lean();
 
   if (!complaint) {
     return res.status(404).json({ success: false, message: 'Complaint not found.' });
