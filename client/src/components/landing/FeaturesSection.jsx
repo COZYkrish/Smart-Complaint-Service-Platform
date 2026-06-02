@@ -1,158 +1,255 @@
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Float } from '@react-three/drei';
+import * as THREE from 'three';
 
+/* ── Mini 3D Model per card ─────────────────────────────── */
+function FeatureModel3D({ type }) {
+  const ref = useRef();
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.rotation.x = t * 0.4;
+    ref.current.rotation.y = t * 0.6;
+  });
+
+  const getGeometry = () => {
+    switch (type) {
+      case 0: return <torusKnotGeometry args={[0.5, 0.18, 80, 12]} />;
+      case 1: return <octahedronGeometry args={[0.65, 0]} />;
+      case 2: return <icosahedronGeometry args={[0.6, 0]} />;
+      case 3: return <torusGeometry args={[0.5, 0.2, 8, 40]} />;
+      case 4: return <dodecahedronGeometry args={[0.6, 0]} />;
+      case 5: return <tetrahedronGeometry args={[0.7, 0]} />;
+      default: return <boxGeometry args={[0.8, 0.8, 0.8]} />;
+    }
+  };
+
+  return (
+    <mesh ref={ref}>
+      {getGeometry()}
+      <meshBasicMaterial color="#ffffff" wireframe transparent opacity={0.3} />
+    </mesh>
+  );
+}
+
+function MiniCanvas({ type }) {
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 2.5], fov: 45 }}
+      gl={{ antialias: true, alpha: true }}
+      dpr={[1, 1.5]}
+      style={{ width: '64px', height: '64px', background: 'transparent' }}
+    >
+      <ambientLight intensity={0.2} />
+      <pointLight position={[2, 2, 2]} intensity={1} color="#ffffff" />
+      <Float floatIntensity={0.3} speed={2}>
+        <FeatureModel3D type={type} />
+      </Float>
+    </Canvas>
+  );
+}
+
+/* ── Features Data ──────────────────────────────────────── */
 const features = [
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
     title: 'Real-Time Tracking',
     description: 'Watch your complaint progress in real-time. Status updates push instantly via WebSocket — no manual refresh needed.',
-    color: '#06b6d4',
-    glow: 'rgba(6,182,212,0.15)',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
     title: 'Intelligent Routing',
     description: 'Smart priority detection categorizes and routes complaints to the right team instantly, cutting response times by 80%.',
-    color: '#a855f7',
-    glow: 'rgba(168,85,247,0.15)',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
     title: 'Analytics Dashboard',
     description: 'Comprehensive analytics give admins instant visibility into complaint trends, resolution rates, and team performance.',
-    color: '#6366f1',
-    glow: 'rgba(99,102,241,0.15)',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
     title: 'Email Notifications',
     description: 'Beautifully designed email updates keep users informed at every stage — from submission to resolution.',
-    color: '#ec4899',
-    glow: 'rgba(236,72,153,0.15)',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-      </svg>
-    ),
     title: 'Enterprise Security',
     description: 'JWT auth, bcrypt encryption, rate limiting, and role-based access control — security baked in from day one.',
-    color: '#10b981',
-    glow: 'rgba(16,185,129,0.15)',
   },
   {
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    ),
     title: 'Smart Caching',
     description: 'High-performance caching ensures blazing fast load times even under heavy load with intelligent cache invalidation.',
-    color: '#f59e0b',
-    glow: 'rgba(245,158,11,0.15)',
   },
 ];
 
+/* ── Feature Card ───────────────────────────────────────── */
 function FeatureCard({ feature, index }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+  const [hovered, setHovered] = useState(false);
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="glass-card"
-      style={{ padding: '32px', height: '100%' }}
+      data-index={`0${index + 1}`}
+      className="feature-card-bw"
+      initial={{ opacity: 0, y: 50, rotateX: 15 }}
+      animate={inView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+      transition={{
+        duration: 0.8,
+        delay: index * 0.1,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ cursor: 'none', height: '100%' }}
     >
-      <div
-        style={{
-          width: '52px',
-          height: '52px',
-          borderRadius: '14px',
-          background: feature.glow,
-          border: `1px solid ${feature.color}33`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: feature.color,
-          marginBottom: '20px',
-          transition: 'all 0.3s',
-        }}
-      >
-        {feature.icon}
+      {/* 3D model icon */}
+      <div style={{
+        width: '64px', height: '64px',
+        border: '1px solid rgba(255,255,255,0.08)',
+        marginBottom: '24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(255,255,255,0.02)',
+        transition: 'border-color 0.3s',
+        borderColor: hovered ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+      }}>
+        <MiniCanvas type={index} />
       </div>
-      <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#f8fafc', marginBottom: '12px', margin: '0 0 12px' }}>
+
+      {/* Index number */}
+      <div style={{
+        fontFamily: 'Space Mono, monospace',
+        fontSize: '0.625rem', letterSpacing: '0.2em',
+        color: '#333333', marginBottom: '16px',
+        textTransform: 'uppercase',
+      }}>
+        Feature — {String(index + 1).padStart(2, '0')}
+      </div>
+
+      <h3 style={{
+        fontSize: '1.125rem', fontWeight: 700, color: '#ffffff',
+        marginBottom: '14px', lineHeight: 1.3,
+        transition: 'color 0.3s',
+      }}>
         {feature.title}
       </h3>
-      <p style={{ fontSize: '0.9375rem', color: '#64748b', lineHeight: 1.7, margin: 0 }}>
+      <p style={{
+        fontSize: '0.9375rem', color: '#555555', lineHeight: 1.75,
+        fontWeight: 400,
+      }}>
         {feature.description}
       </p>
+
+      {/* Bottom reveal line on hover */}
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: hovered ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          height: '1px', background: 'rgba(255,255,255,0.3)',
+          transformOrigin: 'left',
+        }}
+      />
     </motion.div>
   );
 }
 
+/* ── FeaturesSection ────────────────────────────────────── */
 export default function FeaturesSection() {
-  const titleRef = useRef(null);
+  const sectionRef = useRef(null);
+  const titleRef   = useRef(null);
   const titleInView = useInView(titleRef, { once: true });
 
-  return (
-    <section id="features" className="section-padding" style={{ position: 'relative' }}>
-      {/* Background */}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 0%, rgba(99,102,241,0.03) 50%, transparent 100%)', pointerEvents: 'none' }} />
+  // Scroll-driven parallax for entire section
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+  const sectionY = useTransform(scrollYProgress, [0, 1], ['0px', '-40px']);
 
-      <div className="container-wide">
+  return (
+    <section
+      ref={sectionRef}
+      id="features"
+      className="section-padding"
+      style={{ position: 'relative', background: '#000000', overflow: 'hidden' }}
+    >
+      {/* Background grid — offset */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: `
+          linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)
+        `,
+        backgroundSize: '80px 80px',
+        maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+        WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+      }} />
+
+      <motion.div className="container-wide" style={{ y: sectionY }}>
+
         {/* Section header */}
         <motion.div
           ref={titleRef}
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={titleInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          style={{ textAlign: 'center', marginBottom: '80px' }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          style={{ textAlign: 'center', marginBottom: '100px' }}
         >
-          <span className="text-caption" style={{ marginBottom: '16px', display: 'block' }}>
+          <span className="chapter-label" style={{ marginBottom: '20px', display: 'block' }}>
+            Chapter 02 — The Arsenal
+          </span>
+          <span
+            className="text-caption"
+            style={{ marginBottom: '20px', display: 'block', color: '#333333' }}
+          >
             Platform Features
           </span>
           <h2 className="text-headline" style={{ marginBottom: '20px' }}>
             Everything you need to{' '}
             <span className="gradient-text">resolve faster</span>
           </h2>
-          <p className="text-body" style={{ maxWidth: '520px', margin: '0 auto', fontSize: '1.0625rem' }}>
-            Built for teams that take service quality seriously. Every feature designed with obsessive attention to detail.
-          </p>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={titleInView ? { scaleX: 1 } : {}}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.87, 0, 0.13, 1] }}
+            style={{
+              height: '1px', background: 'rgba(255,255,255,0.12)',
+              width: '120px', margin: '28px auto 0', transformOrigin: 'center',
+            }}
+          />
         </motion.div>
 
         {/* Feature grid */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '24px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '1px',
+            background: 'rgba(255,255,255,0.06)',
           }}
         >
           {features.map((feature, i) => (
-            <FeatureCard key={feature.title} feature={feature} index={i} />
+            <div key={feature.title} style={{ background: '#000000' }}>
+              <FeatureCard feature={feature} index={i} />
+            </div>
           ))}
         </div>
-      </div>
+
+        {/* Bottom count */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={titleInView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          style={{
+            textAlign: 'center', marginTop: '60px',
+            fontFamily: 'Space Mono, monospace',
+            fontSize: '0.625rem', letterSpacing: '0.2em',
+            color: '#333333', textTransform: 'uppercase',
+          }}
+        >
+          {features.length} core capabilities — built with obsessive precision
+        </motion.div>
+      </motion.div>
     </section>
   );
 }
